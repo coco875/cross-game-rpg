@@ -1,0 +1,25 @@
+name: Linux Validation
+
+on:
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-2022]
+        config: [release, debug]
+        target: [x86_64-linux-musl, x86_64-linux-gnu, x86-linux-gnu, x86-linux-musl, x86_64-windows-gnu, x86_64-macos-none, aarch64-macos-none, aarch64-linux-gnu, aarch64-linux-musl, aarch64-windows-gnu]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: recursive
+      - uses: mlugg/setup-zig@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+      - run: python build.py --mode ${{ matrix.config }} --target ${{ matrix.target }}
