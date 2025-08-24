@@ -14,13 +14,6 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-2022]
         config: [release, debug]
         target: [x86_64-linux-musl, x86_64-linux-gnu, x86-linux-gnu, x86-linux-musl, aarch64-linux-gnu, aarch64-linux-musl, x86_64-macos-none, aarch64-macos-none, x86_64-windows-gnu, x86-windows-gnu, aarch64-windows-gnu]
-        exclude:
-          - os: ubuntu-latest
-            target: x86_64-windows-gnu
-          - os: ubuntu-latest
-            target: x86-windows-gnu
-          - os: ubuntu-latest
-            target: aarch64-windows-gnu
     steps:
       - uses: actions/checkout@v4
         with:

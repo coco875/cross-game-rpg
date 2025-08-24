@@ -36,6 +36,9 @@ else:
 
 opt += ["-target", target]
 
+if is_target_windows:
+    opt += ["-ladvapi32", "-lkernel32", "-lntdll", "-luser32", "-lshell32"]
+
 async def limit_thread(semaphore: asyncio.Semaphore, fun, *args, **kwargs):
     async with semaphore:
         return await fun(*args, **kwargs)
