@@ -23,5 +23,5 @@ jobs:
       - uses: mlugg/setup-zig@v2
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - run: python build.py --mode ${{ matrix.config }} --target ${{ matrix.target }}
