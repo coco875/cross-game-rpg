@@ -6,6 +6,8 @@ import argparse
 import build_script.utils as utils
 import build_script.zig_utils as zig_utils
 
+import build_script.libs.sdl as sdl
+
 arg_parser = argparse.ArgumentParser(description="Build script for Zig and C/C++ sources")
 arg_parser.add_argument("--build-dir", default="build", help="Directory for build output")
 arg_parser.add_argument("--source-dir", default="src", help="Directory for source files")
@@ -29,15 +31,20 @@ zig_files = [os.path.join(source_dir, "main.zig")]
 c_files = glob.glob(os.path.join(source_dir, "**/*.c"), recursive=True)
 cpp_files = glob.glob(os.path.join(source_dir, "**/*.cpp"), recursive=True)
 
-if mode == "debug":
-    opt = ["-O", zig_utils.DEBUG]
-else:
-    opt = ["-O", zig_utils.RELEASE_SAFE]
+opt: list[str] = []
 
-opt += ["-target", target]
+if "linux" in target or (target == "native" and os.name == "posix" and os.uname().sysname == "Linux"):
+    import build_script.platform.linux as platform
 
-if is_target_windows:
-    opt += ["-ladvapi32", "-lkernel32", "-lntdll", "-luser32", "-lshell32"]
+elif "macos" in target or (target == "native" and os.name == "posix" and os.uname().sysname == "Darwin"):
+    import build_script.platform.macos as platform
+
+elif "windows" in target or (target == "native" and os.name == "nt"):
+    import build_script.platform.windows as platform
+
+opt = platform.flags(mode, target)
+
+opt += sdl.init_sdl2()
 
 async def limit_thread(semaphore: asyncio.Semaphore, fun, *args, **kwargs):
     async with semaphore:
