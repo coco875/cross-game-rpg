@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-2022]
-        config: [ReleaseFast, Debug]
+        config: [release, debug]
         target: [x86_64-linux-musl, x86_64-linux-gnu, x86-linux-gnu, x86-linux-musl, aarch64-linux-gnu, aarch64-linux-musl, x86_64-macos-none, aarch64-macos-none, x86_64-windows-gnu, x86-windows-gnu, aarch64-windows-gnu]
     steps:
       - uses: actions/checkout@v4
@@ -23,4 +23,4 @@ jobs:
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.14.1
-      - run: zig build -Dtarget=${{ matrix.target }} -Dmode=${{ matrix.config }} -Doptimize=${{ matrix.config }} --verbose-cc
+      - run: zig build -Dtarget=${{ matrix.target }} -Dmode=${{ matrix.config }} --verbose-cc
