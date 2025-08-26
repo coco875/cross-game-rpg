@@ -2,6 +2,11 @@
 //! you are building an executable. If you are making a library, the convention
 //! is to delete this file and start with root.zig instead.
 
+const sdl2 = @cImport(@cInclude("SDL.h"));
+
+const screen_width = 640;
+const screen_height = 480;
+
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
@@ -16,6 +21,41 @@ pub fn main() !void {
     try stdout.print("Run `zig build test` to run the tests.\n", .{});
 
     try bw.flush(); // Don't forget to flush!
+
+    if (sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO) != 0) {
+        try stdout.print("Failed to initialize SDL: {s}\n", .{sdl2.SDL_GetError()});
+        return;
+    }
+
+    var window: ?*sdl2.SDL_Window = null;
+    var renderer: ?*sdl2.SDL_Renderer = null;
+
+    if (sdl2.SDL_CreateWindowAndRenderer(
+        screen_width,
+        screen_height,
+        sdl2.SDL_WINDOW_RESIZABLE,
+        &window,
+        &renderer,
+    ) != 0) {
+        try stdout.print("Failed to create window and renderer: {s}\n", .{sdl2.SDL_GetError()});
+        return;
+    }
+
+    var event: sdl2.SDL_Event = undefined;
+
+    while (true) {
+        _ = sdl2.SDL_PollEvent(&event);
+        if (event.type == sdl2.SDL_QUIT) {
+            break;
+        }
+        _ = sdl2.SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        _ = sdl2.SDL_RenderClear(renderer);
+        _ = sdl2.SDL_RenderPresent(renderer);
+    }
+
+    sdl2.SDL_DestroyRenderer(renderer);
+    sdl2.SDL_DestroyWindow(window);
+    sdl2.SDL_Quit();
 }
 
 test "simple test" {

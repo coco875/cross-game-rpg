@@ -1,10 +1,13 @@
 const std = @import("std");
+const sdl2 = @import("build_script/libs/sdl2.zig");
+const builtin = @import("builtin");
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
 pub fn build(b: *std.Build) void {
     const mode = b.option([]const u8, "mode", "Mode of build") orelse "debug";
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -67,6 +70,45 @@ pub fn build(b: *std.Build) void {
         .name = "cross_game_rpg",
         .root_module = exe_mod,
     });
+
+    const sdl2_lib = sdl2.addSdl2(b, target, optimize);
+    exe.linkLibrary(sdl2_lib.compile);
+    exe.addIncludePath(sdl2_lib.local_include);
+    exe.addIncludePath(sdl2_lib.sdl_include);
+
+    // Link system dependencies for SDL (Linux)
+    if (target.result.os.tag == .linux) {
+        exe.linkSystemLibrary("pthread");
+        exe.linkSystemLibrary("dl");
+        exe.linkSystemLibrary("m");
+        exe.linkSystemLibrary("X11");
+        exe.linkSystemLibrary("Xext");
+        exe.linkSystemLibrary("Xcursor");
+        exe.linkSystemLibrary("Xrandr");
+        exe.linkSystemLibrary("Xi");
+    } else if (target.result.os.tag == .windows) {
+        // Libraries nécessaires pour les portions Windows conservées (WGL, GDI, etc.)
+        exe.linkSystemLibrary("user32");
+        exe.linkSystemLibrary("gdi32");
+        exe.linkSystemLibrary("winmm");
+        exe.linkSystemLibrary("imm32");
+        exe.linkSystemLibrary("ole32");
+        exe.linkSystemLibrary("oleaut32");
+        exe.linkSystemLibrary("version");
+        exe.linkSystemLibrary("uuid");
+        exe.linkSystemLibrary("advapi32");
+    } else if (target.result.os.tag == .macos) {
+        if (builtin.os.tag == .macos) {
+            // Only link frameworks when building natively on macOS
+            exe.linkFramework("Cocoa");
+            exe.linkFramework("OpenGL");
+            exe.linkFramework("Carbon");
+            exe.linkFramework("IOKit");
+            exe.linkFramework("CoreVideo");
+        } else {
+            // Cross build: frameworks indisponibles; on s'appuie sur backend dummy déjà conservé.
+        }
+    }
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
